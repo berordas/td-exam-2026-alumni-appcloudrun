@@ -1,0 +1,46 @@
+name: Deploy to CloudRun
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  IMAGE_NAME: gcr.io/${{ vars.GCP_PROJECT_ID }}/python-appcloudrun
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+    - uses: "google-github-actions/setup-gcloud@v2"
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker gcr.io
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t $IMAGE_NAME:$GITHUB_SHA .
+        docker build -t $IMAGE_NAME:latest .
+        docker push $IMAGE_NAME:$GITHUB_SHA
+        docker push $IMAGE_NAME:latest
+
+    - name: Deploy to Cloud Run
+      env:
+        SERVICE_NAME: python-appcloudrun
+        REGION: us-central1
+      run: |
+        gcloud run deploy $SERVICE_NAME \
+            --image=<placeholder> \
+            --region=<placeholder> \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=<placeholder> \
+            --set-env-vars VERSION=<placeholder> \
+            --memory <placeholder>
