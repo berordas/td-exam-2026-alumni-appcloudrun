@@ -43,4 +43,4 @@ jobs:
             --allow-unauthenticated \
             --port=8080 \
             --set-env-vars VERSION=2.0 \
-            --memory=256 MiB
+            --memory=256MiB
